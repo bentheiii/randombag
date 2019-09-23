@@ -1,15 +1,35 @@
+from copy import copy
 from typing import MutableSet
+from warnings import warn
 
-from randombag.roller import Roller
+from randombag.roller import Roller, numpy_enabled
 
 
 class RandomBag(MutableSet):
-    def __init__(self, iterable=(), random_buffer_max_size=1024, seed=None):
-        self._roller = Roller(seed)
+    """
+    A pseudo-random multiset
+    """
+
+    def __init__(self, iterable=(), random_buffer_max_size=None, seed=None):
+        """
+        :param iterable: an initial iterable to be inserted into the bag
+        :param random_buffer_max_size: the maximum size of the random buffer
+        :param seed: A random seed to use. By default, uses the random generator.
+        """
         self._list = list(iterable)
 
-        self._roller.shuffle(self._list)
+        if isinstance(iterable, RandomBag) and seed is None:
+            self._roller = copy(iterable._roller)
+        else:
+            self._roller = Roller(seed)
+            self._roller.shuffle(self._list)
+
         self._dict = {k: i for (i, k) in enumerate(self._list)}
+
+        if random_buffer_max_size is None:
+            random_buffer_max_size = 1024
+        elif not numpy_enabled:
+            warn('numpy could not be imported, random_buffer_max_size is ignored')
         self._buffer_max_size = random_buffer_max_size
 
     def add(self, x) -> None:
@@ -36,7 +56,12 @@ class RandomBag(MutableSet):
         return len(self._list)
 
     def popn(self, n):
-        s = slice(len(self._list) - n, len(self._list))
+        """
+        remove multiple elements from the bag
+        :param n: number of elements to remove
+        :return: a list of the removed elements
+        """
+        s = slice(len(self._list) - 1, len(self._list) - n - 1, -1)
         ret = self._list[s]
         del self._list[s]
         for k in ret:
@@ -76,4 +101,4 @@ class RandomBag(MutableSet):
         self._dict.clear()
 
     def __repr__(self):
-        return type(self).__name__ + '('+repr(self._list)+')'
+        return type(self).__name__ + '(' + repr(self._list) + ')'
