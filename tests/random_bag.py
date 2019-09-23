@@ -46,3 +46,10 @@ class RandomBagTests(TestCase):
         rb2 = RandomBag(rb1, seed=False)
 
         self.assertNotEqual(list(rb1), list(rb2))
+
+    def test_empty(self):
+        rb, control = self.make2()
+        while rb:
+            control.remove(rb.pop())
+            self.assertCountEqual(rb, control)
+        self.assertCountEqual(rb, set())

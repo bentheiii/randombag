@@ -61,7 +61,12 @@ class RandomBag(MutableSet):
         :param n: number of elements to remove
         :return: a list of the removed elements
         """
-        s = slice(len(self._list) - 1, len(self._list) - n - 1, -1)
+        if len(self) < n:
+            raise ValueError('not enough elements')
+        if n == 1:
+            s = slice(len(self._list) - 1,len(self._list))
+        else:
+            s = slice(len(self._list) - 1, len(self._list) - n - 1, -1)
         ret = self._list[s]
         del self._list[s]
         for k in ret:
@@ -69,6 +74,8 @@ class RandomBag(MutableSet):
         return ret
 
     def pop(self):
+        if not self:
+            raise ValueError('bag is empty')
         return self.popn(1)[0]
 
     def _remove_ind(self, ind):
